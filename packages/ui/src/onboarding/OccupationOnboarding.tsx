@@ -18,6 +18,7 @@ import { useZCodeStore } from "@/store/StoreProvider.js";
 import type { InterfaceMode } from "@/lib/interfaceMode.js";
 import { logger } from "@/logger.js";
 import { DesktopWindowControls } from "@/DesktopWindowControls.js";
+import { FINANCE_PRODUCT } from "@/lib/productMode.js";
 import type { OnboardingRecordEntry } from "@zcode/shared";
 
 /** 追加本地引导记录（userId 由 host 补全）；channel 缺失挂起时 5 秒超时按写失败处理。 */
@@ -81,7 +82,8 @@ export function OccupationOnboarding({
     loadDeviceMid,
     update,
   });
-  const onboardingVisible = requested || (needsOnboarding === true && !dismissed);
+  // 金融研究形态：职业/模式引导属通用 ZCode 形态，金融客户端不再弹出（编程模式选项对研究用户无意义）。
+  const onboardingVisible = !FINANCE_PRODUCT && (requested || (needsOnboarding === true && !dismissed));
   const captureEnd = useOnboardingTelemetry({
     platform,
     visible:
