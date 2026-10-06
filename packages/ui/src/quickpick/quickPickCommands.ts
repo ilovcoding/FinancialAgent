@@ -25,6 +25,8 @@ export type QuickPickCommandSectionId =
   | "configure"
   | "app";
 
+import { FINANCE_PRODUCT } from "@/lib/productMode.js";
+
 export const QUICK_PICK_SECTION_ORDER: QuickPickCommandSectionId[] = [
   "suggested",
   "chat",
@@ -289,8 +291,12 @@ export function createQuickPickCommands({
     });
   }
 
+  // 金融研究形态：打开工作区/终端/diff 审查都是写代码工作流命令，命令面板不列出。
+  const financeHidden = new Set(["open-workspace", "toggle-terminal", "add-terminal-tab", "add-review-tab"]);
+
   return commands.filter(
     (command) =>
+      (!FINANCE_PRODUCT || !financeHidden.has(command.id)) &&
       (supportsTerminal ||
         (command.id !== "toggle-terminal" && command.id !== "add-terminal-tab")) &&
       (supportsReview || command.id !== "add-review-tab"),

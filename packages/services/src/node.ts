@@ -291,6 +291,8 @@ import { IGitCheckpointService } from "./git/gitCheckpoint.js";
 import { ISystemService } from "./system/system.js";
 import { ITerminalService } from "./terminal/terminal.js";
 import { ISettingService } from "./setting/setting.js";
+import { IFinanceService } from "./finance/finance.js";
+import { createFinanceService } from "./finance/financeService.js";
 import { IOnboardingRecordService } from "./onboarding/onboardingRecord.js";
 import { ICredentialService } from "./credential/credential.js";
 import { IBroadcastService } from "./broadcast/broadcast.js";
@@ -2439,6 +2441,7 @@ export function createLocalServices(options: {
     .register(ISystemService, systemService)
     .register(ITerminalService, createTerminalService({ settingService }))
     .register(ISettingService, settingService)
+    .register(IFinanceService, createFinanceService())
     .register(IOnboardingRecordService, onboardingRecordService)
     .register(ICredentialService, credentialService)
     .register(IBroadcastService, broadcastService)

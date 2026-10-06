@@ -1,6 +1,8 @@
 /* eslint-disable max-lines -- 设置导航意图集中管理 sessionStorage、事件桥接和解析校验，拆分会让一次性意图消费顺序更难保证。 */
 import { logger } from "@/logger.js";
 
+import { FINANCE_PRODUCT } from "./productMode.js";
+
 export type SettingsSectionId =
   | "general"
   | "appearance"
@@ -19,7 +21,8 @@ export type SettingsSectionId =
   | "workspaceFileSearch"
   | "computerUse"
   | "automations"
-  | "shortcuts";
+  | "shortcuts"
+  | "financeDataSource";
 
 type SettingsUsageTabTarget = "app" | "codingPlan";
 type SettingsPluginTabTarget = "plugins" | "mcps" | "skills" | "commands";
@@ -43,6 +46,9 @@ const HIDDEN_SETTINGS_SECTIONS = new Set<SettingsSectionId>([
   // 编辑页代码保留，放开时从这里移除即可。
   "workspaceFileSearch",
   "computerUse",
+  // 金融研究形态：hooks 面向写代码工作流（git/命令钩子），研究客户端隐藏；
+  // 编辑页代码保留，回退通用形态时从这里移除即可。
+  ...(FINANCE_PRODUCT ? (["hooks"] as const) : []),
 ]);
 
 interface SettingsSectionIntentEventDetail {

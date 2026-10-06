@@ -851,6 +851,10 @@ export function App({
     preserveNextSettingsExit();
     setWorkspaceMainView("plugin-store");
   }, [preserveNextSettingsExit]);
+  const handleNavigateToFinanceMain = useCallback(() => {
+    preserveNextSettingsExit();
+    setWorkspaceMainView("finance");
+  }, [preserveNextSettingsExit]);
   const handleOpenAutomationConsumed = useCallback(() => {
     setOpenAutomationId(null);
     setOpenAutomationTab(null);
@@ -1133,6 +1137,7 @@ export function App({
         onOpenAutomationConsumed={handleOpenAutomationConsumed}
         handleOpenAutomations={handleOpenAutomations}
         handleOpenPluginStore={handleOpenPluginStoreForScope}
+        handleOpenFinance={handleNavigateToFinanceMain}
         handleManageInstalledPlugins={handleManageInstalledPlugins}
         onConnectRemote={onConnectRemote}
         onSelectRemoteProject={onSelectRemoteProject}

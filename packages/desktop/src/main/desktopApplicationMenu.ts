@@ -9,6 +9,7 @@ import {
   type DesktopCommandId,
   type Locale,
 } from "@zcode/shared";
+import { FINANCE_PRODUCT } from "@zcode/shared";
 import { readZCodeStdioTapDevState } from "@zcode/services/node";
 import { CHECK_FOR_UPDATE_MENU_ID, setAutoUpdaterMenuLocale } from "./autoUpdater.js";
 import {
@@ -163,11 +164,16 @@ function buildApplicationMenuTemplate(options: {
           accelerator: resolveMenuAccelerator(options, "newTask", "CmdOrCtrl+N"),
           click: () => void options.executeDesktopCommand(DesktopCommandIds.NewTask),
         },
-        {
-          label: getLabel(desktopMenuMessageIds.fileOpenWorkspace),
-          accelerator: resolveMenuAccelerator(options, "openWorkspace", "CmdOrCtrl+O"),
-          click: () => void options.executeDesktopCommand(DesktopCommandIds.OpenWorkspace),
-        },
+        // 金融研究形态：产品无项目概念，菜单不提供“打开工作区”。
+        ...(FINANCE_PRODUCT
+          ? []
+          : [
+              {
+                label: getLabel(desktopMenuMessageIds.fileOpenWorkspace),
+                accelerator: resolveMenuAccelerator(options, "openWorkspace", "CmdOrCtrl+O"),
+                click: () => void options.executeDesktopCommand(DesktopCommandIds.OpenWorkspace),
+              },
+            ]),
         { type: "separator" as const },
         {
           label: getLabel(desktopMenuMessageIds.fileCloseWindow),

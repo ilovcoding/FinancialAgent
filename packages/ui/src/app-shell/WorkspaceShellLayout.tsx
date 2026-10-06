@@ -46,6 +46,8 @@ import type {
 } from "@/settings/saved-workflows/SavedWorkflowsSection.js";
 import { AutomationsMainBreadcrumbFrame } from "@/settings/AutomationsMainBreadcrumbFrame.js";
 import { PluginStorePage } from "@/settings/PluginStorePage.js";
+import { FinanceWorkbenchMain } from "@/finance/FinanceWorkbenchMain.js";
+import { FINANCE_PRODUCT } from "@/lib/productMode.js";
 import { TaskFindDialog } from "@/quickpick/TaskFindDialog.js";
 import { WorkspaceHeader } from "@/WorkspaceHeader.js";
 import { WorkspaceSidebar, type SidebarFileTreeOpenRequest } from "@/WorkspaceSidebar.js";
@@ -198,6 +200,7 @@ export const WorkspaceShellLayout = memo(function WorkspaceShellLayoutComponent(
   onOpenAutomationConsumed,
   handleOpenAutomations,
   handleOpenPluginStore,
+  handleOpenFinance,
   handleManageInstalledPlugins,
   onConnectRemote,
   onSelectRemoteProject,
@@ -1189,7 +1192,8 @@ export const WorkspaceShellLayout = memo(function WorkspaceShellLayoutComponent(
           onSelectRemoteProject={onSelectRemoteProject}
           onCancelRemoteProject={onCancelRemoteProject}
         />
-        {isOfficeMode ? (
+        {/* 金融研究形态：插件预览与 Git 分支切换都属写代码工作流，两者皆不渲染。 */}
+        {!FINANCE_PRODUCT && isOfficeMode ? (
           <WorkspacePluginPreview
             onOpen={handleOpenPluginStore}
             onSelectPlugin={handleSelectComposerPlugin}
@@ -1197,7 +1201,7 @@ export const WorkspaceShellLayout = memo(function WorkspaceShellLayoutComponent(
             workspaceIdentity={workspaceIdentity}
             remoteSessionId={workspaceRemoteSessionId ?? undefined}
           />
-        ) : !isOfficeMode && activeWorkspacePurpose === "project" ? (
+        ) : !FINANCE_PRODUCT && !isOfficeMode && activeWorkspacePurpose === "project" ? (
           <GitBranchSwitcher
             workspacePath={workspaceAbsPath}
             gitSummary={gitState.summary}
@@ -1598,6 +1602,8 @@ export const WorkspaceShellLayout = memo(function WorkspaceShellLayoutComponent(
                     onOpenCommandCenter={handleOpenCommandCenter}
                     onOpenAutomations={handleOpenAutomations}
                     automationsActive={workspaceMainView === "automations"}
+                    onOpenFinance={handleOpenFinance}
+                    financeActive={workspaceMainView === "finance"}
                     onOpenPluginStore={handleOpenPluginStore}
                     pluginStoreActive={workspaceMainView === "plugin-store"}
                     onFileTreeOpenChange={setIsSidebarFileTreeOpen}
@@ -1818,6 +1824,29 @@ export const WorkspaceShellLayout = memo(function WorkspaceShellLayoutComponent(
                                   onManageInstalled={handleManageInstalledPlugins}
                                 />
                               </div>
+                            </div>
+                          </AutomationsMainBreadcrumbFrame>
+                        </main>
+                      ) : workspaceMainView === "finance" ? (
+                        <main className="flex h-full min-h-0 flex-1 flex-col bg-background">
+                          <AutomationsMainBreadcrumbFrame
+                            isDesktop={Boolean(isDesktop)}
+                            sectionLabel={intl.formatMessage({
+                              id: "workspace.openFinanceWorkbench",
+                            })}
+                            ariaLabel={intl.formatMessage({
+                              id: "workspace.openFinanceWorkbench",
+                            })}
+                          >
+                            <div className="min-h-0 flex-1 overflow-hidden">
+                              <ScopedErrorBoundary
+                                scope="finance-main"
+                                resetKeys={workspaceOnlyResetKeys}
+                                variant="panel"
+                                className="min-h-full"
+                              >
+                                <FinanceWorkbenchMain onCreateTask={handleCreateTaskInChat} />
+                              </ScopedErrorBoundary>
                             </div>
                           </AutomationsMainBreadcrumbFrame>
                         </main>

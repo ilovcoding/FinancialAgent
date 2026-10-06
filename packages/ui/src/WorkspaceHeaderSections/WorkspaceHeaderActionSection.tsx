@@ -6,6 +6,7 @@ import type { WorkspaceHeaderActionSectionProps } from "@/WorkspaceHeaderSection
 import { WorkspaceHelpMenuButton } from "@/WorkspaceHelpMenuButton.js";
 import { ConversationShareMenu } from "@/ConversationShareMenu.js";
 import { DesktopWindowControls } from "@/DesktopWindowControls.js";
+import { FINANCE_PRODUCT } from "@/lib/productMode.js";
 
 export type { WorkspaceHeaderActionSectionProps } from "@/WorkspaceHeaderSections/shared.js";
 
@@ -38,7 +39,8 @@ export function WorkspaceHeaderActionSection({
         useWindowsCaptionSpacing ? "-my-2 h-12 gap-0" : "gap-0.5",
       )}
     >
-      {variant === "task" ? (
+      {/* 金融研究形态隐藏代码编辑器入口；研究场景不需要本地编辑器。 */}
+      {variant === "task" && !FINANCE_PRODUCT ? (
         <WorkspaceEditorButtonGroup
           disabledReason={readOnlyReason}
           workspaceAbsPath={workspaceAbsPath}
@@ -57,13 +59,16 @@ export function WorkspaceHeaderActionSection({
       {!simplifyForNarrowRemote ? (
         <>
           {!hideHelpMenu ? <WorkspaceHelpMenuButton isDesktop={Boolean(isDesktop)} /> : null}
-          {/* 远程控制移动端头部空间过窄，终端入口在这里会和核心操作争抢宽度。*/}
-          <WorkspaceTerminalToggleButton
-            isTerminalOpen={isTerminalOpen}
-            onToggleTerminal={onToggleTerminal}
-            disabledReason={readOnlyReason}
-            useWindowsCaptionSpacing={useWindowsCaptionSpacing}
-          />
+          {/* 远程控制移动端头部空间过窄，终端入口在这里会和核心操作争抢宽度。
+              金融研究形态同样隐藏终端入口（写代码工作流的一部分）。 */}
+          {!FINANCE_PRODUCT ? (
+            <WorkspaceTerminalToggleButton
+              isTerminalOpen={isTerminalOpen}
+              onToggleTerminal={onToggleTerminal}
+              disabledReason={readOnlyReason}
+              useWindowsCaptionSpacing={useWindowsCaptionSpacing}
+            />
+          ) : null}
         </>
       ) : null}
       {/* 远程控制移动端只保留图标，避免 diff 数字把按钮撑宽导致标题拥挤。 */}

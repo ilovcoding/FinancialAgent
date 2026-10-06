@@ -82,6 +82,8 @@ export const ServiceChannels = {
   /** Git checkpoint 服务 */
   GitCheckpoint: "git-checkpoint",
   Setting: "setting",
+  /** 金融数据服务（Tushare 本地直连，金融工作台 UI 专用） */
+  Finance: "finance",
   /** 凭据管理（从 main IPC 迁移到 host RPC） */
   Credential: "credential",
   /** Computer Use Helper macOS 权限服务 */

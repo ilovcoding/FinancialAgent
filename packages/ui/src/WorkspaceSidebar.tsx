@@ -16,6 +16,7 @@ import {
   Blocks,
   CalendarClock,
   Clock3,
+  LineChart,
   Cloud,
   Folder,
   FolderOpen,
@@ -71,6 +72,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import { FINANCE_PRODUCT } from "@/lib/productMode.js";
 import { logger } from "@/logger.js";
 import { NewTaskButtonGroup } from "@/NewTaskButtonGroup.js";
 import { selectWorkspaceZCodeState, useZCodeSessionStore } from "@/store/zcodeSessionStore.js";
@@ -259,8 +261,10 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
   onOpenCommandCenter,
   onOpenAutomations,
   onOpenPluginStore,
+  onOpenFinance,
   automationsActive = false,
   pluginStoreActive = false,
+  financeActive = false,
   onFileTreeOpenChange,
 }: {
   workspacePath: string;
@@ -311,8 +315,10 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
   onOpenCommandCenter: () => void;
   onOpenAutomations?: () => void;
   onOpenPluginStore?: () => void;
+  onOpenFinance?: () => void;
   automationsActive?: boolean;
   pluginStoreActive?: boolean;
+  financeActive?: boolean;
   onFileTreeOpenChange?: (open: boolean) => void;
 }) {
   const { intl, localePreference, setLocalePreference } = useZCodeIntl();
@@ -752,6 +758,9 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
   const handleOpenPluginStoreMain = useCallback(() => {
     onOpenPluginStore?.();
   }, [onOpenPluginStore]);
+  const handleOpenFinanceMain = useCallback(() => {
+    onOpenFinance?.();
+  }, [onOpenFinance]);
   const handleOpenAutomationsMain = useCallback(() => {
     onOpenAutomations?.();
   }, [onOpenAutomations]);
@@ -1271,6 +1280,11 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
                   if (workspaceReadOnly) {
                     return;
                   }
+                  // 金融研究形态：新研究一律落在研究会话空间，不进入项目工作区。
+                  if (FINANCE_PRODUCT) {
+                    onCreateConversationTask();
+                    return;
+                  }
                   if (taskViewMode === "grouped") {
                     if (createGroupedTaskDraftAction) {
                       createGroupedTaskDraftAction();
@@ -1331,20 +1345,37 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
               <CalendarClock className="size-4" />
               {intl.formatMessage({ id: "workspace.openScheduledSettings" })}
             </Button>
+            {/* 金融研究形态隐藏插件市场（写代码生态入口）；回退通用形态时恢复。 */}
+            {!FINANCE_PRODUCT ? (
+              <Button
+                variant="ghost"
+                onClick={handleOpenPluginStoreMain}
+                data-icon="inline-start"
+                data-testid="plugin-store-sidebar-open"
+                size="lg"
+                aria-pressed={pluginStoreActive}
+                className={cn(
+                  "w-full justify-start gap-2 text-foreground hover:bg-surface-hover hover:text-foreground",
+                  pluginStoreActive && "bg-selected text-foreground",
+                )}
+              >
+                <Blocks className="size-4" />
+                {intl.formatMessage({ id: "workspace.openPluginsSettings" })}
+              </Button>
+            ) : null}
             <Button
               variant="ghost"
-              onClick={handleOpenPluginStoreMain}
+              onClick={handleOpenFinanceMain}
               data-icon="inline-start"
-              data-testid="plugin-store-sidebar-open"
               size="lg"
-              aria-pressed={pluginStoreActive}
+              aria-pressed={financeActive}
               className={cn(
                 "w-full justify-start gap-2 text-foreground hover:bg-surface-hover hover:text-foreground",
-                pluginStoreActive && "bg-selected text-foreground",
+                financeActive && "bg-selected text-foreground",
               )}
             >
-              <Blocks className="size-4" />
-              {intl.formatMessage({ id: "workspace.openPluginsSettings" })}
+              <LineChart className="size-4" />
+              {intl.formatMessage({ id: "workspace.openFinanceWorkbench" })}
             </Button>
           </div>
 
@@ -1428,7 +1459,9 @@ export const WorkspaceSidebar = memo(function WorkspaceSidebarComponent({
                     >
                       <div data-purpose-section-list="true">
                         {purposeSectionPreferences.sectionOrder.map((sectionId) =>
-                          sectionId === "projects" ? (
+                          // 金融研究形态：侧栏不渲染“项目”分区，只保留研究会话分区；
+                          // 项目恢复链路已在 root 层过滤，此处不会出现孤立项目数据。
+                          sectionId === "projects" && !FINANCE_PRODUCT ? (
                             <WorkspacePurposeSection
                               key={sectionId}
                               sortableId={sectionId}

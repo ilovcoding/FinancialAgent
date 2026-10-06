@@ -67,6 +67,7 @@ import { SubagentsSection } from "@/settings/SubagentsSection.js";
 import { AutomationsSection } from "@/settings/AutomationsSection.js";
 import { SegmentPill } from "@/settings/PluginStoreListView.js";
 import { PluginsSection } from "@/settings/PluginsSection.js";
+import { FinanceDataSourceSection } from "@/settings/FinanceDataSourceSection.js";
 import { HooksSection } from "@/settings/HooksSection.js";
 import { WorkspaceFileSearchSection } from "@/settings/WorkspaceFileSearchSection.js";
 import { MemorySettingsSection } from "@/settings/MemorySettingsSection.js";
@@ -1863,6 +1864,8 @@ export function SettingsPage({
                               onBack?.();
                             }}
                           />
+                        ) : activeSection === "financeDataSource" ? (
+                          <FinanceDataSourceSection />
                         ) : activeSection === "skill" ? (
                           <PluginsSection
                             key={`skill:${settingsSectionNavigationVersion}`}

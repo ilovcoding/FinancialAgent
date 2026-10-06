@@ -45,6 +45,7 @@ import {
 } from "@/root/reconnectRemoteWorkspaceHistoryEntry.js";
 import { useRemoteConnectionEntryVisibility } from "@/hooks/useRemoteConnectionEntryVisibility.js";
 import { markRemoteWorkspaceRunningTasksFailed } from "@/lib/remoteWorkspaceSessionRuntime.js";
+import { FINANCE_PRODUCT } from "@/lib/productMode.js";
 
 export { reconnectRemoteWorkspaceHistoryEntry };
 
@@ -652,7 +653,8 @@ export function useRemoteWorkspaceHistory({
   onWorkspaceActivated?: (target: { workspacePath: string; workspaceIdentity: string }) => void;
 }) {
   const showRemoteConnectionEntry = useRemoteConnectionEntryVisibility();
-  const canUseRemoteWorkspace = allowRemoteWorkspace && showRemoteConnectionEntry;
+  // 金融研究形态：SSH 远程工作区属写代码工作流，入口与 tab 恢复都不启用。
+  const canUseRemoteWorkspace = !FINANCE_PRODUCT && allowRemoteWorkspace && showRemoteConnectionEntry;
   const allowRemoteWorkspaceRestore = canUseRemoteWorkspace;
   const [remoteWorkspaceSessions, setRemoteWorkspaceSessions] = useState<
     RemoteWorkspaceSessionEntry[]

@@ -2,7 +2,7 @@ import { access, cp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promis
 import { dirname, join } from "node:path";
 
 export const DEV_ELECTRON_PROTOCOL_SCHEME = "zcode";
-export const DEV_ELECTRON_APP_NAME = "ZCode Dev";
+export const DEV_ELECTRON_APP_NAME = "FAgent Dev";
 export const DEV_ELECTRON_APP_BUNDLE_ID = "dev.zcode.app.development";
 // 副本布局版本，见 prepareDevElectronAppBundle 中的指纹说明。
 export const DEV_ELECTRON_BUNDLE_FORMAT = 2;
@@ -108,6 +108,13 @@ export async function prepareDevElectronAppBundle({
     await cp(electronAppPath, appPath, { recursive: true, verbatimSymlinks: true });
     const patchedInfoPlist = patchDevElectronInfoPlist(await readFile(infoPlistPath, "utf8"));
     await writeFile(infoPlistPath, patchedInfoPlist, "utf8");
+    // 产品图标：存在品牌图标时覆盖 Electron 默认图标，让 dev bundle 与正式包同源。
+    // 不依赖 cwd：dev.mjs 可能从 packages/desktop 被过滤执行，用脚本自身路径定位。
+    const brandIconPath = join(dirname(new URL(import.meta.url).pathname), "..", "build", "icon.icns");
+    const brandIcon = await readFile(brandIconPath).catch(() => undefined);
+    if (brandIcon) {
+      await writeFile(join(appPath, "Contents", "Resources", "electron.icns"), brandIcon);
+    }
     // 指纹最后写：中途失败时下次仍会判定为需要重拷，不会留下半成品缓存。
     if (sourceStamp !== undefined) await writeFile(sourceStampPath, sourceStamp, "utf8");
   }

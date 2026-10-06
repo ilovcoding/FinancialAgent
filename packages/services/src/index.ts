@@ -56,6 +56,15 @@ export {
 
 // File service — IFileService is both a type (interface) and value (descriptor)
 export { IFileService } from "./file/file.js";
+// Finance service — 接口 browser-safe；实现（node fs/fetch）只从 @zcode/services/node 注册
+export { IFinanceService } from "./finance/finance.js";
+export type {
+  FinanceSecurityBrief,
+  FinanceDailyBar,
+  FinanceDailyBasic,
+  FinanceConfig,
+  FinanceConnectionTestResult,
+} from "./finance/finance.js";
 export { IMediaPreviewService } from "./media-preview/mediaPreview.js";
 export type { MediaPreviewPreparation } from "./media-preview/mediaPreview.js";
 

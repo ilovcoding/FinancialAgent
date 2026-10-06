@@ -8,6 +8,7 @@ import {
   resolveRemoteWorkspaceSessionIdentity,
 } from "@/lib/remoteWorkspaceHistory.js";
 import { logger } from "@/logger.js";
+import { FINANCE_PRODUCT } from "@/lib/productMode.js";
 import {
   isWorkspaceTab,
   type RestorableWorkspaceTab,
@@ -87,6 +88,12 @@ export function restorePersistedRemoteWorkspaceSessions({
 
   for (const [index, persistedEntry] of persistedSessions.entries()) {
     if (persistedEntry.kind === "local") {
+      // 金融研究形态：产品模型没有“项目”概念，恢复链路只保留研究会话空间；
+      // 用户历史上的项目 workspace 不再进入 tab 与侧栏（持久化数据不动，回退即恢复）。
+      // conversationWorkspacePath 尚未解析时全部跳过，由 Root 兜底 ensureConversationWorkspace。
+      if (FINANCE_PRODUCT && persistedEntry.workspacePath !== conversationWorkspacePath) {
+        continue;
+      }
       const isStaleConversationWorkspace = Boolean(
         conversationWorkspacePath &&
         persistedEntry.workspacePurpose === "conversation" &&
