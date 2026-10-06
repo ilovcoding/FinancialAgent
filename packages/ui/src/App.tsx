@@ -17,6 +17,7 @@ import { useTabStore } from "@/store/TabStoreProvider.js";
 import { isWorkspaceReadOnly, isWorkspaceTab } from "@/store/tabStore.js";
 import type { TaskChatMessage as TestChatMessage } from "@/lib/taskChatMessageTypes.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import { addFagentNavigateListener } from "@/finance/FinanceHomeHero.js";
 import { useIsOfficeMode } from "@/hooks/useInterfaceMode.js";
 import { getPathLeaf } from "@/lib/path.js";
 import {
@@ -898,6 +899,21 @@ export function App({
   useEffect(
     () => addPluginStoreOpenListener(handleOpenPluginStoreForScope),
     [handleOpenPluginStoreForScope],
+  );
+  // 金融研究首页的核心功能卡导航：Hero 组件用事件解耦（EmptyState 拿不到视图切换回调）。
+  useEffect(
+    () =>
+      addFagentNavigateListener((view) => {
+        if (view === "finance") {
+          handleNavigateToFinanceMain();
+        } else if (view === "automations") {
+          handleNavigateToAutomationsMain({
+            workspacePath: workspaceAbsPath,
+            workspaceIdentity,
+          });
+        }
+      }),
+    [handleNavigateToFinanceMain, handleNavigateToAutomationsMain, workspaceAbsPath, workspaceIdentity],
   );
   const handleSelectAdjacentConversation = useCallback(
     (direction: "previous" | "next") => {

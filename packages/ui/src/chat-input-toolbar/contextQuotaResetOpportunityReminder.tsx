@@ -2,6 +2,7 @@ import { AlarmClock, GiftIcon, XIcon } from "lucide-react";
 import type { useZCodeIntl } from "@/i18n/IntlProvider.js";
 import { formatCodingPlanQuotaResetCountdown } from "@/components/coding-plan-quota-reset/CodingPlanQuotaResetDialog.js";
 import { Button } from "@/components/ui/button.js";
+import { FINANCE_PRODUCT } from "@/lib/productMode.js";
 
 export const CONTEXT_QUOTA_RESET_URGENT_SECONDS = 180;
 
@@ -135,6 +136,10 @@ export function ContextQuotaResetOpportunityReminderContent({
   phase: ContextQuotaResetOpportunityReminderPhase;
   remainingSeconds: number;
 }) {
+  // 金融研究形态：套餐额度重置提醒属开发者计费语境，研究客户端不展示。
+  if (FINANCE_PRODUCT) {
+    return null;
+  }
   if (phase === "initial") {
     return (
       <span

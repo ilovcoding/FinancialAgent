@@ -18,6 +18,7 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { ArrowDownIcon } from "lucide-react";
 import { TID_V4_TIMELINE, TID_V4_TIMELINE_BOTTOM } from "@zcode/shared";
+import { FINANCE_PRODUCT } from "@/lib/productMode.js";
 import type {
   ApiRetryState,
   AttachmentRef,
@@ -1792,7 +1793,12 @@ function ConversationTimelineImpl({
             responsiveCenteredEmptyLayout
               ? // 动态修改原生窗口下限会把内容换行反馈到窗口拖动，产生阻尼；
                 // 容器保留固有最小高度，由外层 timeline 统一承接受限高度下的溢出内容。
-                "flex min-h-full flex-col items-center px-4 before:block before:min-h-[52px] before:w-full before:shrink before:basis-[29dvh] before:content-[''] after:block after:min-h-4 after:w-full after:flex-1 after:content-['']"
+                cn(
+                  "flex min-h-full flex-col items-center px-4 before:block before:min-h-[52px] before:w-full before:shrink before:basis-[29dvh] before:content-[''] after:block after:min-h-4 after:w-full after:flex-1 after:content-['']",
+                  // 金融研究首页自带 slogan/指数/功能卡，内容已足够高：29dvh 的顶部
+                  // 伸缩留白会叠加成大片空白，收敛为固定小留白。
+                  FINANCE_PRODUCT && "before:!basis-[6dvh] before:!min-h-4",
+                )
               : centeredEmptyLayout
                 ? "flex min-h-full flex-col items-center justify-center gap-4 px-4"
                 : "flex min-h-full flex-col",
@@ -1806,7 +1812,11 @@ function ConversationTimelineImpl({
             <div
               className={cn(
                 centeredEmptyLayout
-                  ? "flex w-full max-w-2xl shrink-0 items-center justify-center"
+                  ? // 金融研究首页内容较高：垂直居中会在顶部留大片空白，改为顶部对齐 + 适度上边距。
+                    cn(
+                      "flex w-full max-w-2xl shrink-0 justify-center",
+                      FINANCE_PRODUCT ? "items-start" : "items-center",
+                    )
                   : "min-h-0 flex-1",
                 !centeredEmptyLayout && summaryPanelInlineOffsetClassName,
               )}

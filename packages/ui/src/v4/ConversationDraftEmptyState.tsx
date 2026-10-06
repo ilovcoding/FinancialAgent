@@ -10,6 +10,8 @@ import { cn } from "@/components/lib/utils.js";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
 import { useIsOfficeMode } from "@/hooks/useInterfaceMode.js";
 import { logger } from "@/logger.js";
+import { FINANCE_PRODUCT } from "@/lib/productMode.js";
+import { FinanceHomeHero } from "@/finance/FinanceHomeHero.js";
 
 const GREETING_BOUNDARY_HOURS = [5, 9, 12, 14, 18, 23] as const;
 const GREETING_MIN_FONT_SIZE_PX = 20;
@@ -171,6 +173,8 @@ export function ConversationDraftEmptyState({ className }: { className?: string 
     <div
       className={cn(
         "relative mb-10 flex w-full max-w-2xl flex-col items-center justify-center gap-6 text-foreground sm:mb-8",
+        // 金融首页 Hero 内容较高：收紧底距并整体上移，避免居中布局下顶部大片留白。
+        FINANCE_PRODUCT && "mb-2 gap-3",
         className,
       )}
     >
@@ -179,32 +183,38 @@ export function ConversationDraftEmptyState({ className }: { className?: string 
         className={cn(
           "pointer-events-none absolute left-1/2 top-1/2 aspect-[5/4] w-[min(72vw,25rem)] -mt-10",
           "-translate-x-1/2 -translate-y-1/2 text-foreground-subtlest",
+          FINANCE_PRODUCT && "hidden",
         )}
       >
         <ZCodeEmptyStateLogo className="h-full w-full" />
       </div>
-      <p
-        ref={greetingContainerRef}
-        data-v4-draft-greeting="true"
-        style={
-          {
-            "--v4-draft-greeting-font-size": `${greetingFontSizePx}px`,
-          } as CSSProperties
-        }
-        className={cn(
-          "relative z-10 w-full px-4 text-center font-medium text-foreground",
-          "text-[length:var(--v4-draft-greeting-font-size)]/[1.2]",
-        )}
-      >
-        <span
-          ref={greetingMeasurementRef}
-          aria-hidden="true"
-          className="pointer-events-none invisible absolute whitespace-nowrap text-3xl/[1.2]"
+      {FINANCE_PRODUCT ? (
+        // 金融研究形态：首页以产品定位语 + 核心功能入口为主视觉，问候语弱化为引导行。
+        <FinanceHomeHero greeting={greeting} />
+      ) : (
+        <p
+          ref={greetingContainerRef}
+          data-v4-draft-greeting="true"
+          style={
+            {
+              "--v4-draft-greeting-font-size": `${greetingFontSizePx}px`,
+            } as CSSProperties
+          }
+          className={cn(
+            "relative z-10 w-full px-4 text-center font-medium text-foreground",
+            "text-[length:var(--v4-draft-greeting-font-size)]/[1.2]",
+          )}
         >
-          {greeting}
-        </span>
-        <span>{greeting}</span>
-      </p>
+          <span
+            ref={greetingMeasurementRef}
+            aria-hidden="true"
+            className="pointer-events-none invisible absolute whitespace-nowrap text-3xl/[1.2]"
+          >
+            {greeting}
+          </span>
+          <span>{greeting}</span>
+        </p>
+      )}
     </div>
   );
 }
