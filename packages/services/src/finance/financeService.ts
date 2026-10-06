@@ -7,6 +7,9 @@ import type {
   FinanceConnectionTestResult,
   FinanceDailyBar,
   FinanceDailyBasic,
+  FinanceFinancialPeriod,
+  FinanceIndexQuote,
+  FinanceMoneyflowDay,
   FinanceSecurityBrief,
   IFinanceService,
 } from "./finance.js";
@@ -193,6 +196,101 @@ export function createFinanceService(): IFinanceService {
         turnover_rate: num(latest.turnover_rate),
         volume_ratio: num(latest.volume_ratio),
       };
+    },
+
+    async getIndexQuotes(): Promise<FinanceIndexQuote[]> {
+      const targets: Array<{ tsCode: string; name: string }> = [
+        { tsCode: "000001.SH", name: "上证指数" },
+        { tsCode: "399001.SZ", name: "深证成指" },
+        { tsCode: "399006.SZ", name: "创业板指" },
+      ];
+      const results = await Promise.all(
+        targets.map(async (target) => {
+          const rows = await tushare("index_daily", {
+            ts_code: target.tsCode,
+            start_date: todayStr(-15),
+            end_date: todayStr(),
+          });
+          const latest = rows.sort((a, b) => (a.trade_date! < b.trade_date! ? 1 : -1))[0];
+          return {
+            tsCode: target.tsCode,
+            name: target.name,
+            close: latest ? num(latest.close) : null,
+            pctChg: latest ? num(latest.pct_chg) : null,
+          } satisfies FinanceIndexQuote;
+        }),
+      );
+      return results;
+    },
+
+    async getFinancials(symbol: string, periods = 6): Promise<FinanceFinancialPeriod[]> {
+      const ts = normalizeSymbol(symbol);
+      const n = Math.min(Math.max(periods, 1), 12);
+      const windowStart = todayStr(-n * 220 - 400);
+      const [inc, ind] = await Promise.all([
+        tushare("income", { ts_code: ts, start_date: windowStart, end_date: todayStr() }),
+        tushare("fina_indicator", { ts_code: ts, start_date: windowStart, end_date: todayStr() }),
+      ]);
+      const byPeriod = new Map<string, FinanceFinancialPeriod>();
+      for (const r of ind) {
+        byPeriod.set(r.end_date ?? "", {
+          period: r.end_date ?? "",
+          revenueYi: null,
+          netProfitYi: null,
+          roe: num(r.roe),
+          grossMargin: num(r.grossprofit_margin),
+          netMargin: num(r.netprofit_margin),
+          debtToAssets: num(r.debt_to_assets),
+          netProfitYoy: num(r.netprofit_yoy),
+          revenueYoy: num(r.or_yoy),
+        });
+      }
+      for (const r of inc) {
+        const key = r.end_date ?? "";
+        const entry =
+          byPeriod.get(key) ??
+          ({
+            period: key,
+            revenueYi: null,
+            netProfitYi: null,
+            roe: null,
+            grossMargin: null,
+            netMargin: null,
+            debtToAssets: null,
+            netProfitYoy: null,
+            revenueYoy: null,
+          } satisfies FinanceFinancialPeriod);
+        entry.revenueYi = r.total_revenue
+          ? Number((Number(r.total_revenue) / 1e8).toFixed(2))
+          : null;
+        entry.netProfitYi = r.n_income ? Number((Number(r.n_income) / 1e8).toFixed(2)) : null;
+        byPeriod.set(key, entry);
+      }
+      return [...byPeriod.values()]
+        .sort((a, b) => (a.period < b.period ? 1 : -1))
+        .slice(0, n);
+    },
+
+    async getMoneyflow(symbol: string): Promise<FinanceMoneyflowDay[]> {
+      const ts = normalizeSymbol(symbol);
+      const rows = await tushare("moneyflow", {
+        ts_code: ts,
+        start_date: todayStr(-25),
+        end_date: todayStr(),
+      });
+      return rows
+        .sort((a, b) => (a.trade_date! < b.trade_date! ? 1 : -1))
+        .slice(0, 10)
+        .map((r) => {
+          const elgNet = (num(r.buy_elg_amount) ?? 0) - (num(r.sell_elg_amount) ?? 0);
+          const lgNet = (num(r.buy_lg_amount) ?? 0) - (num(r.sell_lg_amount) ?? 0);
+          return {
+            date: r.trade_date ?? "",
+            elgNetYi: Number((elgNet / 1e4).toFixed(2)),
+            lgNetYi: Number((lgNet / 1e4).toFixed(2)),
+            mainNetYi: Number(((elgNet + lgNet) / 1e4).toFixed(2)),
+          } satisfies FinanceMoneyflowDay;
+        });
     },
   };
 }

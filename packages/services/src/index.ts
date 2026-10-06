@@ -62,6 +62,9 @@ export type {
   FinanceSecurityBrief,
   FinanceDailyBar,
   FinanceDailyBasic,
+  FinanceIndexQuote,
+  FinanceFinancialPeriod,
+  FinanceMoneyflowDay,
   FinanceConfig,
   FinanceConnectionTestResult,
 } from "./finance/finance.js";

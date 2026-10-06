@@ -1,22 +1,31 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useZCodeIntl } from "@/i18n/IntlProvider.js";
-import { Search, Plus, X, Loader2, Play, ShieldAlert } from "lucide-react";
+import { Search, Plus, X, Loader2, Play, ShieldAlert, Settings, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button.js";
 import { useFinanceStore } from "@/store/financeStore.js";
-import { useFinanceDaily, useFinanceSearch } from "@/hooks/useFinance.js";
-import { FinanceKLineChart } from "./FinanceKLineChart.js";
+import {
+  useFinanceDaily,
+  useFinanceSearch,
+  useFinanceIndexQuotes,
+  useFinanceWatchlistSparks,
+  useFinanceFundamentals,
+} from "@/hooks/useFinance.js";
+import { FinanceSparkline } from "./FinanceCharts.js";
+import { FinanceStockDetail } from "./FinanceStockDetail.js";
 
 interface FinanceWorkbenchMainProps {
   /** 只预填会话草稿，不自动发送；与「判断归人」的合规设计一致。 */
   onCreateTask: (options: { initialPrompt: string }) => void;
+  /** 首次使用引导：跳设置页配 token。 */
+  onOpenSettings?: () => void;
 }
 
 /**
- * 金融工作台主视图：自选股 + 日线 K 线 + AI 研究入口。
+ * 金融工作台主视图：指数条 + 自选股（含迷你走势）+ 个股详情（K线/基本面/资金流）+ AI 研究入口。
  * 数据全部来自 host 侧 financeService（Tushare 本地直连）；研究指令经 onCreateTask
  * 预填到当前会话，由 agent 侧 finance MCP 工具 + finance skills 执行。
  */
-export function FinanceWorkbenchMain({ onCreateTask }: FinanceWorkbenchMainProps) {
+export function FinanceWorkbenchMain({ onCreateTask, onOpenSettings }: FinanceWorkbenchMainProps) {
   const { intl } = useZCodeIntl();
   const t = (id: string) => intl.formatMessage({ id });
   const watchlist = useFinanceStore((s) => s.watchlist);
@@ -27,21 +36,20 @@ export function FinanceWorkbenchMain({ onCreateTask }: FinanceWorkbenchMainProps
   const [keyword, setKeyword] = useState("");
   const { search, searching } = useFinanceSearch();
   const [results, setResults] = useState<Awaited<ReturnType<typeof search>>>([]);
-  const selected = useMemo(
-    () => watchlist.find((it) => it.tsCode === selectedTsCode) ?? null,
-    [watchlist, selectedTsCode],
-  );
+  const selected = watchlist.find((it) => it.tsCode === selectedTsCode) ?? null;
   const { bars, basic, loading, error, reload } = useFinanceDaily(selectedTsCode);
+  const { quotes: indexQuotes } = useFinanceIndexQuotes();
+  const sparkByCode = useFinanceWatchlistSparks(watchlist.map((it) => it.tsCode));
+  const [fundNonce, setFundNonce] = useState(0);
+  const { financials, moneyflow, loading: fundLoading, error: fundError } = useFinanceFundamentals(
+    selectedTsCode,
+    fundNonce,
+  );
 
   const handleSearch = useCallback(async () => {
     const found = await search(keyword);
     setResults(found);
   }, [keyword, search]);
-
-  const latest = bars[0];
-  const prevClose = bars[1]?.close ?? null;
-  const pct = latest?.pct_chg ?? (latest?.close && prevClose ? ((latest.close - prevClose) / prevClose) * 100 : null);
-  const priceUp = (pct ?? 0) >= 0;
 
   const sendPrompt = useCallback(
     (prompt: string) => {
@@ -55,6 +63,29 @@ export function FinanceWorkbenchMain({ onCreateTask }: FinanceWorkbenchMainProps
     <div className="flex h-full min-h-0 w-full">
       {/* 自选股列 */}
       <aside className="flex w-60 min-h-0 flex-col border-r border-border bg-background">
+        {/* 指数条 */}
+        <div className="flex flex-col gap-0.5 border-b border-border px-2 py-2">
+          {indexQuotes.length > 0
+            ? indexQuotes.map((q) => (
+                <div key={q.tsCode} className="flex items-center justify-between rounded-lg px-2 py-1">
+                  <span className="text-ui-sm text-foreground-subtle">{q.name}</span>
+                  <span className="flex items-baseline gap-1.5">
+                    <span className="font-mono text-ui-sm text-foreground-strong">
+                      {q.close?.toFixed(2) ?? "—"}
+                    </span>
+                    <span
+                      className={`font-mono text-ui-xs ${
+                        (q.pctChg ?? 0) >= 0 ? "text-destructive" : "text-success"
+                      }`}
+                    >
+                      {q.pctChg != null ? `${q.pctChg >= 0 ? "+" : ""}${q.pctChg.toFixed(2)}%` : ""}
+                    </span>
+                  </span>
+                </div>
+              ))
+            : null}
+        </div>
+
         <div className="flex items-center gap-2 px-3 pt-3 pb-2">
           <div className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg border border-input-border bg-input px-2">
             <Search className="size-3.5 shrink-0 text-foreground-subtlest" />
@@ -103,121 +134,112 @@ export function FinanceWorkbenchMain({ onCreateTask }: FinanceWorkbenchMainProps
               {t("finance.noWatchlist")}
             </p>
           ) : (
-            watchlist.map((it) => (
-              <div
-                key={it.tsCode}
-                className={`group flex items-center rounded-lg px-2 py-1.5 ${
-                  it.tsCode === selectedTsCode ? "bg-selected" : "hover:bg-hover"
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => setSelected(it.tsCode)}
-                  className="min-w-0 flex-1 text-left"
+            watchlist.map((it) => {
+              const spark = sparkByCode[it.tsCode] ?? [];
+              const first = spark[0] ?? 0;
+              const last = spark[spark.length - 1] ?? 0;
+              const up = last >= first;
+              return (
+                <div
+                  key={it.tsCode}
+                  className={`group flex items-center rounded-lg px-2 py-1.5 ${
+                    it.tsCode === selectedTsCode ? "bg-selected" : "hover:bg-hover"
+                  }`}
                 >
-                  <div className="truncate text-ui-sm text-foreground">{it.name}</div>
-                  <div className="font-mono text-ui-xs text-foreground-subtlest">{it.tsCode}</div>
-                </button>
-                <button
-                  type="button"
-                  aria-label={t("finance.removeWatch")}
-                  onClick={() => removeWatch(it.tsCode)}
-                  className="hidden shrink-0 rounded p-1 text-foreground-subtlest hover:bg-hover group-hover:block"
-                >
-                  <X className="size-3" />
-                </button>
-              </div>
-            ))
+                  <button
+                    type="button"
+                    onClick={() => setSelected(it.tsCode)}
+                    className="min-w-0 flex-1 text-left"
+                  >
+                    <div className="truncate text-ui-sm text-foreground">{it.name}</div>
+                    <div className="font-mono text-ui-xs text-foreground-subtlest">{it.tsCode}</div>
+                  </button>
+                  <div
+                    // A 股红涨绿跌：sparkline 与 K 线共用语义色。
+                    style={
+                      {
+                        "--finance-up": "var(--color-destructive)",
+                        "--finance-down": "var(--color-success)",
+                      } as React.CSSProperties
+                    }
+                  >
+                    <FinanceSparkline values={spark} up={up} />
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={t("finance.removeWatch")}
+                    onClick={() => removeWatch(it.tsCode)}
+                    className="ml-1.5 hidden shrink-0 rounded p-1 text-foreground-subtlest hover:bg-hover group-hover:block"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              );
+            })
           )}
         </div>
       </aside>
 
-      {/* 个股详情 */}
-      <section className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-background px-5 py-4">
+      {/* 个股详情 / 空态引导 */}
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-background">
         {!selected ? (
-          <div className="flex h-full items-center justify-center text-ui-sm text-foreground-subtlest">
-            {t("finance.selectStock")}
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6">
+            <h3 className="text-ui-lg font-bold text-foreground">{t("finance.empty.guideTitle")}</h3>
+            <p className="text-ui-sm text-foreground-subtle">{t("finance.empty.guideSub")}</p>
+            <ol className="flex w-full max-w-md flex-col gap-2">
+              {["finance.empty.step1", "finance.empty.step2", "finance.empty.step3"].map((id, i) => (
+                <li
+                  key={id}
+                  className="flex items-center gap-3 rounded-xl border border-card-border bg-card px-4 py-3"
+                >
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-surface text-ui-sm font-semibold text-foreground-subtle">
+                    {i + 1}
+                  </span>
+                  <span className="text-ui-sm text-foreground">{t(id)}</span>
+                </li>
+              ))}
+            </ol>
+            {onOpenSettings ? (
+              <Button variant="outline" size="sm" onClick={onOpenSettings}>
+                <Settings className="size-3.5" />
+                {t("finance.empty.goSettings")}
+              </Button>
+            ) : null}
+          </div>
+        ) : loading ? (
+          <div className="flex flex-1 items-center justify-center">
+            <Loader2 className="size-5 animate-spin text-foreground-subtlest" />
+          </div>
+        ) : error ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 text-ui-sm text-foreground-subtle">
+            <span>
+              {t("finance.loadError")}：{error}
+            </span>
+            <Button variant="outline" size="sm" onClick={reload}>
+              {t("finance.retry")}
+            </Button>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 className="text-ui-lg font-bold text-foreground">{selected.name}</h2>
-              <span className="font-mono text-ui-sm text-foreground-subtle">{selected.tsCode}</span>
-              {selected.industry ? (
-                <span className="rounded-full bg-surface px-2 py-0.5 text-ui-xs text-foreground-subtle">
-                  {selected.industry}
-                </span>
-              ) : null}
-              <div className="ml-auto flex items-baseline gap-2">
-                <span
-                  className={`font-mono text-ui-xl font-bold ${priceUp ? "text-destructive" : "text-success"}`}
-                >
-                  {latest?.close?.toFixed(2) ?? "—"}
-                </span>
-                <span className={`font-mono text-ui-sm ${priceUp ? "text-destructive" : "text-success"}`}>
-                  {pct === null ? "" : `${priceUp ? "+" : ""}${pct.toFixed(2)}%`}
-                </span>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
-              {[
-                { k: "PE(TTM)", v: basic?.pe_ttm?.toFixed(1) },
-                { k: "PB", v: basic?.pb?.toFixed(2) },
-                {
-                  k: t("finance.marketCap"),
-                  v: basic?.total_mv_yi ? `${(basic.total_mv_yi / 1e4).toFixed(2)}万亿` : null,
-                },
-                {
-                  k: t("finance.turnoverRate"),
-                  v: basic?.turnover_rate ? `${basic.turnover_rate.toFixed(2)}%` : null,
-                },
-                {
-                  k: t("finance.volumeRatio"),
-                  v: basic?.volume_ratio?.toFixed(2),
-                },
-              ].map(({ k, v }) => (
-                <div key={k}>
-                  <div className="text-ui-xs text-foreground-subtlest">{k}</div>
-                  <div className="font-mono text-ui-sm text-foreground">{v ?? "—"}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="rounded-xl border border-card-border bg-card">
-              <div className="flex items-center gap-3 border-b border-card-border px-3 py-2">
-                <span className="text-ui-sm font-medium text-foreground">{t("finance.dailyK")}</span>
-                <span className="text-ui-xs text-foreground-subtlest">{t("finance.unadjusted")}</span>
-                <span className="ml-auto text-ui-xs text-foreground-subtlest">
-                  {t("finance.dataSourceNote")}
-                </span>
-              </div>
-              <div className="px-2 py-2">
-                {loading ? (
-                  <div className="flex h-[360px] items-center justify-center">
-                    <Loader2 className="size-5 animate-spin text-foreground-subtlest" />
-                  </div>
-                ) : error ? (
-                  <div className="flex h-[360px] flex-col items-center justify-center gap-2 text-ui-sm text-foreground-subtle">
-                    <span>
-                      {t("finance.loadError")}：{error}
-                    </span>
-                    <Button variant="outline" size="sm" onClick={reload}>
-                      {t("finance.retry")}
-                    </Button>
-                  </div>
-                ) : (
-                  <FinanceKLineChart bars={bars} />
-                )}
-              </div>
-            </div>
-          </div>
+          <FinanceStockDetail
+            name={selected.name}
+            tsCode={selected.tsCode}
+            industry={selected.industry}
+            bars={bars}
+            basic={basic}
+            financials={financials}
+            moneyflow={moneyflow}
+            fundLoading={fundLoading}
+            fundError={fundError}
+            onRetryFundamentals={() => setFundNonce((n) => n + 1)}
+          />
         )}
       </section>
 
       {/* AI 研究面板 */}
       <aside className="flex w-72 min-h-0 flex-col gap-3 overflow-y-auto border-l border-border bg-background p-3.5">
         <div className="rounded-xl border border-card-border bg-card p-3.5">
-          <h3 className="mb-1 text-ui-sm font-semibold text-foreground">
+          <h3 className="mb-1 flex items-center gap-1.5 text-ui-sm font-semibold text-foreground">
+            <MessageSquare className="size-3.5" />
             {t("finance.deepResearch")}
             {selected ? ` · ${selected.name}` : ""}
           </h3>
@@ -249,9 +271,7 @@ export function FinanceWorkbenchMain({ onCreateTask }: FinanceWorkbenchMainProps
                 key={id}
                 type="button"
                 disabled={!selected}
-                onClick={() =>
-                  sendPrompt(intl.formatMessage({ id: promptId }, { symbol }))
-                }
+                onClick={() => sendPrompt(intl.formatMessage({ id: promptId }, { symbol }))}
                 className="rounded-full border border-border px-2.5 py-1 text-ui-xs text-foreground-subtle hover:bg-hover hover:text-foreground disabled:opacity-50"
               >
                 {t(id)}

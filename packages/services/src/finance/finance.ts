@@ -32,6 +32,35 @@ export interface FinanceDailyBasic {
   volume_ratio: number | null;
 }
 
+export interface FinanceIndexQuote {
+  tsCode: string;
+  name: string;
+  close: number | null;
+  pctChg: number | null;
+}
+
+export interface FinanceFinancialPeriod {
+  period: string;
+  revenueYi: number | null;
+  netProfitYi: number | null;
+  roe: number | null;
+  grossMargin: number | null;
+  netMargin: number | null;
+  debtToAssets: number | null;
+  netProfitYoy: number | null;
+  revenueYoy: number | null;
+}
+
+export interface FinanceMoneyflowDay {
+  date: string;
+  /** 主力净流入（亿元）：大单+超大单买入减卖出 */
+  mainNetYi: number | null;
+  /** 超大单净流入（亿元） */
+  elgNetYi: number | null;
+  /** 大单净流入（亿元） */
+  lgNetYi: number | null;
+}
+
 export interface FinanceConfig {
   tushareTokenConfigured: boolean;
 }
@@ -50,6 +79,12 @@ export interface IFinanceService {
   searchSecurities(keyword: string): Promise<FinanceSecurityBrief[]>;
   getDailyBars(symbol: string, limit?: number): Promise<FinanceDailyBar[]>;
   getDailyBasic(symbol: string): Promise<FinanceDailyBasic>;
+  /** 三大指数最新收盘快照（上证/深证/创业板）。 */
+  getIndexQuotes(): Promise<FinanceIndexQuote[]>;
+  /** 最近 N 期财务摘要（income + fina_indicator 合并口径）。 */
+  getFinancials(symbol: string, periods?: number): Promise<FinanceFinancialPeriod[]>;
+  /** 近 10 日资金流向（moneyflow，亿元口径）。 */
+  getMoneyflow(symbol: string): Promise<FinanceMoneyflowDay[]>;
 }
 
 export const IFinanceService = createServiceDescriptor<IFinanceService>(ServiceChannels.Finance);

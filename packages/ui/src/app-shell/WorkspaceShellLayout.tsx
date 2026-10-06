@@ -48,6 +48,7 @@ import { AutomationsMainBreadcrumbFrame } from "@/settings/AutomationsMainBreadc
 import { PluginStorePage } from "@/settings/PluginStorePage.js";
 import { FinanceWorkbenchMain } from "@/finance/FinanceWorkbenchMain.js";
 import { FINANCE_PRODUCT } from "@/lib/productMode.js";
+import { setPendingSettingsSectionIntent } from "@/lib/settingsNavigation.js";
 import { TaskFindDialog } from "@/quickpick/TaskFindDialog.js";
 import { WorkspaceHeader } from "@/WorkspaceHeader.js";
 import { WorkspaceSidebar, type SidebarFileTreeOpenRequest } from "@/WorkspaceSidebar.js";
@@ -1845,7 +1846,14 @@ export const WorkspaceShellLayout = memo(function WorkspaceShellLayoutComponent(
                                 variant="panel"
                                 className="min-h-full"
                               >
-                                <FinanceWorkbenchMain onCreateTask={handleCreateTaskInChat} />
+                                <FinanceWorkbenchMain
+                                  onCreateTask={handleCreateTaskInChat}
+                                  onOpenSettings={() => {
+                                    // 空态引导直连金融数据源分区，少一层设置页找路。
+                                    setPendingSettingsSectionIntent("financeDataSource");
+                                    tabStoreApi.getState().openSettingsTab();
+                                  }}
+                                />
                               </ScopedErrorBoundary>
                             </div>
                           </AutomationsMainBreadcrumbFrame>
