@@ -1,23 +1,37 @@
 <svg width="436" height="360" viewBox="0 0 436 360" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g opacity="0.15" filter="url(#filter0_f_5488_3806)">
-<path d="M416.94 21L165.546 340H19L55.5693 293.581L138.137 190.103L138.141 190.098L233.312 68.0605L233.313 68.0615L270.394 21H416.94ZM282.514 293.771H390.497L354.052 339.998H207.856L220.612 323.807C235.554 304.84 258.368 293.771 282.514 293.771ZM227.134 21L220.756 29.0889C201.752 53.1885 172.752 67.252 142.061 67.252H43.9502L80.3965 21H227.134Z" fill="url(#paint0_linear_5488_3806)"/>
-</g>
-<path d="M416.94 21L165.546 340H19L55.5693 293.581L138.137 190.103L138.141 190.098L233.312 68.0605L233.313 68.0615L270.394 21H416.94ZM282.514 293.771H390.497L354.052 339.998H207.856L220.612 323.807C235.554 304.84 258.368 293.771 282.514 293.771ZM227.134 21L220.756 29.0889C201.752 53.1885 172.752 67.252 142.061 67.252H43.9502L80.3965 21H227.134Z" stroke="url(#paint1_linear_5488_3806)"/>
-<defs>
-<filter id="filter0_f_5488_3806" x="16.6" y="18.6" width="402.74" height="323.8" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-<feGaussianBlur stdDeviation="1.2" result="effect1_foregroundBlur_5488_3806"/>
-</filter>
-<linearGradient id="paint0_linear_5488_3806" x1="217.97" y1="20.5" x2="217.97" y2="340.5" gradientUnits="userSpaceOnUse">
-<stop stop-color="#444444" stop-opacity="0.6"/>
-<stop offset="0.5" stop-color="#2A2A2A" stop-opacity="0.3"/>
-<stop offset="1" stop-color="#1A1A1A" stop-opacity="0.1"/>
-</linearGradient>
-<linearGradient id="paint1_linear_5488_3806" x1="217.97" y1="20.5" x2="217.97" y2="340.5" gradientUnits="userSpaceOnUse">
-<stop stop-color="#444444" stop-opacity="0.6"/>
-<stop offset="0.5" stop-color="#2A2A2A" stop-opacity="0.3"/>
-<stop offset="1" stop-color="#1A1A1A" stop-opacity="0.1"/>
-</linearGradient>
-</defs>
+  <!-- FAgent 空状态品牌图形：六边形框架 + 三根 K 线蜡烛（灰阶描边风格，与启动徽章同源） -->
+  <g transform="translate(218 180) scale(6.4) translate(-24 -24)">
+    <g opacity="0.15" filter="url(#fagentGlow)">
+      <path d="M17 8.5 H31 L39 15 V25" stroke="url(#fagentStroke)" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M31 39.5 H17 L9 33 V23" stroke="url(#fagentStroke)" stroke-width="2.4" stroke-linecap="round"/>
+      <circle cx="39" cy="28" r="2.6" fill="url(#fagentStroke)"/>
+      <circle cx="9" cy="20" r="2.6" fill="url(#fagentStroke)"/>
+    </g>
+    <path d="M17 8.5 H31 L39 15 V25" stroke="url(#fagentStroke)" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M31 39.5 H17 L9 33 V23" stroke="url(#fagentStroke)" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="39" cy="28" r="2.6" fill="url(#fagentStroke)"/>
+    <circle cx="9" cy="20" r="2.6" fill="url(#fagentStroke)"/>
+    <g stroke="url(#fagentStroke)" stroke-width="2">
+      <line x1="16" y1="20" x2="16" y2="30"/>
+      <line x1="24" y1="13" x2="24" y2="35"/>
+      <line x1="32" y1="22" x2="32" y2="29"/>
+    </g>
+    <g fill="url(#fagentStroke)">
+      <rect x="14" y="22.5" width="4" height="4.5" rx="1"/>
+      <rect x="22" y="16.5" width="4" height="13" rx="1"/>
+      <rect x="30" y="24" width="4" height="4" rx="1"/>
+    </g>
+  </g>
+  <defs>
+    <filter id="fagentGlow" x="-20%" y="-20%" width="140%" height="140%" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+      <feGaussianBlur stdDeviation="1.2" result="effect1_foregroundBlur"/>
+    </filter>
+    <linearGradient id="fagentStroke" x1="9" y1="8" x2="39" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#444444" stop-opacity="0.6"/>
+      <stop offset="0.5" stop-color="#2A2A2A" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#1A1A1A" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
 </svg>
